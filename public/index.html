@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IPTV Bridge — Cinema for your Stremio & Nuvio</title>
+  <meta name="description" content="Connect Xtream Codes or M3U IPTV to Stremio & Nuvio with TMDB matching, global search and clean categories. Serverless, free, Vercel-ready." />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: {
+      serif: ['"Instrument Serif"','serif'], sans: ['"Space Grotesk"','sans-serif'], mono: ['"JetBrains Mono"','monospace'] } } } };
+  </script>
+  <link rel="stylesheet" href="/theme.css" />
+</head>
+<body class="antialiased">
+  <div class="grain"></div>
+  <div class="vignette"></div>
+  <div id="cursor"></div>
+
+  <!-- NAV -->
+  <nav id="nav" class="fixed top-0 inset-x-0 z-50 px-5 sm:px-10 py-4 flex items-center justify-between transition-all duration-300">
+    <a href="/" class="flex items-center gap-2.5" data-cursor>
+      <img src="/logo.svg" class="w-7 h-7 rounded-lg" alt="IPTV Bridge" />
+      <span class="font-sans font-semibold tracking-tight">IPTV Bridge</span>
+    </a>
+    <div class="hidden md:flex items-center gap-8 text-sm text-[var(--paper)]/70 font-sans">
+      <a href="#how" class="ul" data-cursor>Method</a>
+      <a href="#features" class="ul" data-cursor>Features</a>
+      <a href="#stack" class="ul" data-cursor>Stack</a>
+      <a href="/docs" class="ul" data-cursor>Docs</a>
+      <a href="#faq" class="ul" data-cursor>FAQ</a>
+    </div>
+    <a href="/configure" class="text-sm font-semibold ember px-4 py-2 rounded-full font-sans inline-flex items-center gap-1.5 leading-none" data-cursor><span>Configure</span> <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i></a>
+  </nav>
+
+  <!-- HERO -->
+  <header class="relative z-10 min-h-screen flex flex-col justify-center px-5 sm:px-10 pt-24 pb-16 overflow-hidden">
+    <div class="max-w-[1400px] mx-auto w-full relative z-10">
+      <div class="flex items-center gap-3 mb-8 flex-wrap">
+        <span data-hero-tag class="text-xs font-sans tracking-[0.25em] uppercase text-[var(--muted)]">Serverless</span>
+        <span class="w-8 h-px bg-[var(--line)]"></span>
+        <span data-hero-tag class="text-xs font-sans tracking-[0.25em] uppercase text-[var(--muted)]">Stremio · Nuvio</span>
+        <span class="w-8 h-px bg-[var(--line)]"></span>
+        <span data-hero-tag class="text-xs font-sans tracking-[0.25em] uppercase text-[var(--muted)]">Free on Vercel</span>
+      </div>
+
+      <h1 class="display text-[16vw] sm:text-[12vw] lg:text-[10.5vw]">
+        <span class="line-mask"><span data-hero-line>Turn your IPTV</span></span>
+        <span class="line-mask"><span data-hero-line>into a <span class="italic-accent">cinema.</span></span></span>
+      </h1>
+
+      <div class="mt-10 grid md:grid-cols-[1.4fr_1fr] gap-8 items-end">
+        <p data-hero-sub class="text-lg sm:text-xl text-[var(--paper)]/70 max-w-xl leading-relaxed font-sans">
+          Xtream Codes or an M3U link becomes organized catalogs, global search, and automatic TMDB matching — every film and show resolves straight to your own sources.
+        </p>
+        <div data-hero-cta class="flex flex-col sm:flex-row md:justify-end gap-3">
+          <a href="/configure" class="ember px-7 py-4 rounded-full font-sans font-semibold text-sm inline-flex items-center justify-center gap-2 leading-none" data-magnetic data-cursor-big>
+            <span>Configure</span> <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+          </a>
+          <a href="#how" class="glass-btn px-7 py-4 rounded-full font-sans font-semibold text-sm inline-flex items-center justify-center gap-2 leading-none" data-cursor>
+            <span>The method</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div data-hero-scroll class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-[var(--muted)]">
+      <span class="text-[10px] font-sans tracking-[0.3em] uppercase">Scroll</span>
+      <span class="w-px h-10 bg-gradient-to-b from-[var(--accent)] to-transparent"></span>
+    </div>
+  </header>
+
+  <!-- MARQUEE -->
+  <section class="relative z-10 border-y border-[var(--line)] py-6 overflow-hidden">
+    <div id="marquee-track" class="marquee items-center gap-12"></div>
+  </section>
+
+  <!-- STATS -->
+  <section class="relative z-10 px-5 sm:px-10 py-20 border-b border-[var(--line)]">
+    <div class="max-w-[1400px] mx-auto">
+      <div class="grid grid-cols-2 lg:grid-cols-4 rounded-3xl overflow-hidden border border-[var(--line)] divide-x divide-y lg:divide-y-0 divide-[var(--line)]">
+        <div class="stat group relative p-7 sm:p-9" data-reveal data-cursor>
+          <div class="flex items-center gap-2 mb-5 text-[var(--muted)]">
+            <i data-lucide="plug-zap" class="w-4 h-4"></i>
+            <span class="text-[11px] font-sans uppercase tracking-[0.2em]">Inputs</span>
+          </div>
+          <p class="display text-6xl sm:text-7xl text-[var(--accent)] leading-none">2</p>
+          <p class="text-sm text-[var(--paper)]/70 font-sans mt-3 font-medium">Provider formats</p>
+          <p class="text-xs text-[var(--muted)] font-sans mt-1">Xtream Codes &amp; M3U / M3U8</p>
+        </div>
+        <div class="stat group relative p-7 sm:p-9" data-reveal data-cursor>
+          <div class="flex items-center gap-2 mb-5 text-[var(--muted)]">
+            <i data-lucide="layout-grid" class="w-4 h-4"></i>
+            <span class="text-[11px] font-sans uppercase tracking-[0.2em]">Catalogs</span>
+          </div>
+          <p class="display text-6xl sm:text-7xl leading-none group-hover:text-[var(--accent)] transition-colors">3</p>
+          <p class="text-sm text-[var(--paper)]/70 font-sans mt-3 font-medium">Content types</p>
+          <p class="text-xs text-[var(--muted)] font-sans mt-1">Live TV · Movies · Series</p>
+        </div>
+        <div class="stat group relative p-7 sm:p-9" data-reveal data-cursor>
+          <div class="flex items-center gap-2 mb-5 text-[var(--muted)]">
+            <i data-lucide="database" class="w-4 h-4"></i>
+            <span class="text-[11px] font-sans uppercase tracking-[0.2em]">Infra</span>
+          </div>
+          <p class="display text-6xl sm:text-7xl leading-none group-hover:text-[var(--accent)] transition-colors">0</p>
+          <p class="text-sm text-[var(--paper)]/70 font-sans mt-3 font-medium">Databases or servers</p>
+          <p class="text-xs text-[var(--muted)] font-sans mt-1">Fully stateless &amp; serverless</p>
+        </div>
+        <div class="stat group relative p-7 sm:p-9" data-reveal data-cursor>
+          <div class="flex items-center gap-2 mb-5 text-[var(--muted)]">
+            <i data-lucide="wallet" class="w-4 h-4"></i>
+            <span class="text-[11px] font-sans uppercase tracking-[0.2em]">Cost</span>
+          </div>
+          <p class="display text-6xl sm:text-7xl leading-none group-hover:text-[var(--accent)] transition-colors">$0</p>
+          <p class="text-sm text-[var(--paper)]/70 font-sans mt-3 font-medium">Hosting on Vercel</p>
+          <p class="text-xs text-[var(--muted)] font-sans mt-1">Runs on the free tier</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROVIDER FORMATS -->
+  <section class="relative z-10 px-5 sm:px-10 py-24 border-b border-[var(--line)]">
+    <div class="max-w-[1400px] mx-auto">
+      <div class="flex items-end justify-between mb-12 flex-wrap gap-4">
+        <div>
+          <p class="text-xs font-sans tracking-[0.25em] uppercase text-[var(--muted)] mb-3" data-reveal>Two ways in</p>
+          <h2 class="display text-5xl sm:text-7xl" data-reveal>Bring your own source</h2>
+        </div>
+        <a href="/configure" class="ghost px-5 py-3 rounded-full font-sans text-sm flex items-center gap-2" data-cursor data-reveal>
+          Connect now <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+        </a>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="format-card group relative border border-[var(--line)] rounded-3xl p-7 sm:p-9 overflow-hidden" data-reveal data-cursor>
+          <div class="flex items-center justify-between mb-6">
+            <div class="w-12 h-12 rounded-2xl bg-[rgba(255,94,43,0.1)] border border-[rgba(255,94,43,0.25)] grid place-items-center">
+              <i data-lucide="key-round" class="w-5 h-5 text-[var(--accent)]"></i>
+            </div>
+            <span class="text-[11px] font-sans uppercase tracking-[0.2em] text-[var(--muted)] px-3 py-1 rounded-full border border-[var(--line)]">Recommended</span>
+          </div>
+          <h3 class="text-2xl font-sans font-semibold mb-2">Xtream Codes API</h3>
+          <p class="text-sm text-[var(--paper)]/60 font-sans leading-relaxed mb-6">Host, username and password. We pull live, VOD and series categories directly — the cleanest, richest experience.</p>
+          <ul class="space-y-2.5 text-sm font-sans">
+            <li class="flex items-center gap-2.5 text-[var(--paper)]/75"><i data-lucide="check" class="w-4 h-4 text-[var(--accent)]"></i> Native category structure</li>
+            <li class="flex items-center gap-2.5 text-[var(--paper)]/75"><i data-lucide="check" class="w-4 h-4 text-[var(--accent)]"></i> Per-episode series resolution</li>
+            <li class="flex items-center gap-2.5 text-[var(--paper)]/75"><i data-lucide="check" class="w-4 h-4 text-[var(--accent)]"></i> Account status &amp; expiry check</li>
+          </ul>
+        </div>
+
+        <div class="format-card group relative border border-[var(--line)] rounded-3xl p-7 sm:p-9 overflow-hidden" data-reveal data-cursor>
+          <div class="flex items-center justify-between mb-6">
+            <div class="w-12 h-12 rounded-2xl bg-[rgba(244,240,232,0.05)] border border-[var(--line)] grid place-items-center">
+              <i data-lucide="link-2" class="w-5 h-5 text-[var(--paper)]/80"></i>
+            </div>
+            <span class="text-[11px] font-sans uppercase tracking-[0.2em] text-[var(--muted)] px-3 py-1 rounded-full border border-[var(--line)]">Universal</span>
+          </div>
+          <h3 class="text-2xl font-sans font-semibold mb-2">M3U / M3U8 Playlist</h3>
+          <p class="text-sm text-[var(--paper)]/60 font-sans leading-relaxed mb-6">Any single playlist URL. We parse group titles, logos and TVG metadata, then organize everything automatically.</p>
+          <ul class="space-y-2.5 text-sm font-sans">
+            <li class="flex items-center gap-2.5 text-[var(--paper)]/75"><i data-lucide="check" class="w-4 h-4 text-[var(--accent)]"></i> Works with any provider</li>
+            <li class="flex items-center gap-2.5 text-[var(--paper)]/75"><i data-lucide="check" class="w-4 h-4 text-[var(--accent)]"></i> Auto group &amp; type detection</li>
+            <li class="flex items-center gap-2.5 text-[var(--paper)]/75"><i data-lucide="check" class="w-4 h-4 text-[var(--accent)]"></i> Logo &amp; metadata extraction</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW / METHOD -->
+  <section id="how" class="relative z-10 px-5 sm:px-10 py-28 sm:py-40">
+    <div class="max-w-[1400px] mx-auto">
+      <div class="flex items-baseline justify-between mb-14 flex-wrap gap-4">
+        <div>
+          <p class="text-xs font-sans tracking-[0.25em] uppercase text-[var(--muted)] mb-3" data-reveal>How it works</p>
+          <h2 class="display text-6xl sm:text-8xl" data-reveal>The method</h2>
+        </div>
+        <span class="text-sm font-sans text-[var(--muted)] max-w-xs" data-reveal>Three moving parts, one clean result inside your player.</span>
+      </div>
+      <div id="method-grid" class="grid md:grid-cols-3 gap-4">
+        <div class="method-card group relative border border-[var(--line)] rounded-3xl p-8 sm:p-9 overflow-hidden">
+          <div class="flex items-center justify-between mb-8">
+            <span class="method-num display text-6xl text-[var(--paper)]/15 group-hover:text-[var(--accent)] transition-colors duration-500">01</span>
+            <i data-lucide="plug-zap" class="w-5 h-5 text-[var(--accent)]"></i>
+          </div>
+          <h3 class="text-2xl mb-3 font-sans font-semibold">Connect</h3>
+          <p class="text-[var(--paper)]/60 leading-relaxed font-sans text-sm">Drop in Xtream credentials or an M3U URL. We parse channels, movies and series in one pass and cache them warm.</p>
+        </div>
+        <div class="method-card group relative border border-[var(--line)] rounded-3xl p-8 sm:p-9 overflow-hidden">
+          <div class="flex items-center justify-between mb-8">
+            <span class="method-num display text-6xl text-[var(--paper)]/15 group-hover:text-[var(--accent)] transition-colors duration-500">02</span>
+            <i data-lucide="clapperboard" class="w-5 h-5 text-[var(--accent)]"></i>
+          </div>
+          <h3 class="text-2xl mb-3 font-sans font-semibold">Resolve</h3>
+          <p class="text-[var(--paper)]/60 leading-relaxed font-sans text-sm">Titles are cleaned of release tags and matched to TMDB — posters, years, ratings and IMDB/TMDB IDs all line up.</p>
+        </div>
+        <div class="method-card group relative border border-[var(--line)] rounded-3xl p-8 sm:p-9 overflow-hidden">
+          <div class="flex items-center justify-between mb-8">
+            <span class="method-num display text-6xl text-[var(--paper)]/15 group-hover:text-[var(--accent)] transition-colors duration-500">03</span>
+            <i data-lucide="play" class="w-5 h-5 text-[var(--accent)]"></i>
+          </div>
+          <h3 class="text-2xl mb-3 font-sans font-semibold">Stream</h3>
+          <p class="text-[var(--paper)]/60 leading-relaxed font-sans text-sm">Search anything in Stremio or Nuvio and your own IPTV source appears as a playable stream. One tap, it plays.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features" class="relative z-10 px-5 sm:px-10 py-20 border-t border-[var(--line)]">
+    <div class="max-w-[1400px] mx-auto">
+      <p class="text-sm font-sans tracking-[0.25em] uppercase text-[var(--muted)] mb-10" data-reveal>What you get</p>
+      <ul id="feature-list" class="divide-y divide-[var(--line)] overflow-hidden">
+        <li class="feature-row py-7 flex items-center justify-between gap-6 group" data-side="left" data-cursor><span class="display text-4xl sm:text-6xl transition-transform duration-500 group-hover:translate-x-3">Clean categories</span><span class="text-[var(--muted)] text-sm font-sans max-w-xs text-right hidden sm:block">Live, Movies & Series sorted into tidy catalogs.</span></li>
+        <li class="feature-row py-7 flex items-center justify-between gap-6 group" data-side="right" data-cursor><span class="display text-4xl sm:text-6xl transition-transform duration-500 group-hover:translate-x-3">Global search</span><span class="text-[var(--muted)] text-sm font-sans max-w-xs text-right hidden sm:block">Find any title, stream from your provider.</span></li>
+        <li class="feature-row py-7 flex items-center justify-between gap-6 group" data-side="left" data-cursor><span class="display text-4xl sm:text-6xl transition-transform duration-500 group-hover:translate-x-3">TMDB matching</span><span class="text-[var(--muted)] text-sm font-sans max-w-xs text-right hidden sm:block">Posters, ratings, IMDB & TMDB resolution.</span></li>
+        <li class="feature-row py-7 flex items-center justify-between gap-6 group" data-side="right" data-cursor><span class="display text-4xl sm:text-6xl transition-transform duration-500 group-hover:translate-x-3">Zero servers</span><span class="text-[var(--muted)] text-sm font-sans max-w-xs text-right hidden sm:block">Credentials live in your link. Nothing stored.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ARCHITECTURE / STACK -->
+  <section id="stack" class="relative z-10 px-5 sm:px-10 py-20 border-t border-[var(--line)]">
+    <div class="max-w-[1400px] mx-auto">
+      <div class="flex items-center justify-between mb-12 flex-wrap gap-4">
+        <div>
+          <p class="text-xs font-sans tracking-[0.25em] uppercase text-[var(--muted)] mb-3" data-reveal>Architecture</p>
+          <h2 class="display text-5xl sm:text-7xl" data-reveal>Under the hood</h2>
+        </div>
+        <a href="https://github.com/jozphe/IPTV-BRIDGE" target="_blank" rel="noreferrer" class="source-link" data-cursor data-reveal>
+          <span class="source-link-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2C6.477 2 2 6.588 2 12.253c0 4.532 2.865 8.376 6.839 9.733.5.095.682-.222.682-.493 0-.244-.009-.889-.014-1.744-2.782.619-3.369-1.374-3.369-1.374-.455-1.184-1.11-1.499-1.11-1.499-.908-.637.069-.624.069-.624 1.003.073 1.531 1.056 1.531 1.056.892 1.567 2.341 1.114 2.91.852.091-.663.349-1.114.635-1.37-2.221-.259-4.556-1.139-4.556-5.067 0-1.119.39-2.034 1.029-2.751-.103-.259-.446-1.302.098-2.712 0 0 .84-.276 2.75 1.051A9.37 9.37 0 0 1 12 6.991a9.36 9.36 0 0 1 2.504.346c1.909-1.327 2.748-1.051 2.748-1.051.546 1.41.202 2.453.1 2.712.64.717 1.028 1.632 1.028 2.751 0 3.938-2.339 4.805-4.567 5.058.359.317.679.944.679 1.903 0 1.373-.012 2.481-.012 2.819 0 .274.18.593.688.492C19.138 20.626 22 16.784 22 12.253 22 6.588 17.523 2 12 2Z"/>
+            </svg>
+          </span>
+          <span class="source-link-label">View source</span>
+          <i data-lucide="arrow-up-right" class="source-link-arrow"></i>
+        </a>
+      </div>
+
+      <!-- Horizontal signal flow with a travelling ember pulse -->
+      <div id="flow" class="relative mb-4 overflow-x-auto" data-reveal>
+        <div class="relative min-w-[720px] py-6">
+          <span class="flow-line absolute left-[8%] right-[8%] top-1/2 h-px bg-[var(--line)]"></span>
+          <span class="flow-pulse absolute top-1/2 w-24 h-px"></span>
+          <div class="relative grid grid-cols-5">
+            <div class="flow-node group flex flex-col items-center text-center px-2">
+              <span class="fdot w-14 h-14 rounded-2xl border border-[var(--line)] bg-[var(--ink)] grid place-items-center mb-3 transition-all duration-300 group-hover:border-[var(--accent)]"><i data-lucide="key-round" class="w-5 h-5 text-[var(--accent)]"></i></span>
+              <span class="text-[10px] font-mono text-[var(--muted)] mb-1">01</span>
+              <p class="font-sans font-semibold text-sm">Source</p>
+              <p class="text-[11px] text-[var(--muted)] font-sans">Xtream / M3U</p>
+            </div>
+            <div class="flow-node group flex flex-col items-center text-center px-2">
+              <span class="fdot w-14 h-14 rounded-2xl border border-[var(--line)] bg-[var(--ink)] grid place-items-center mb-3 transition-all duration-300 group-hover:border-[var(--accent)]"><i data-lucide="filter" class="w-5 h-5 text-[var(--accent)]"></i></span>
+              <span class="text-[10px] font-mono text-[var(--muted)] mb-1">02</span>
+              <p class="font-sans font-semibold text-sm">Parse &amp; cache</p>
+              <p class="text-[11px] text-[var(--muted)] font-sans">Clean · warm TTL</p>
+            </div>
+            <div class="flow-node group flex flex-col items-center text-center px-2">
+              <span class="fdot w-14 h-14 rounded-2xl border border-[var(--line)] bg-[var(--ink)] grid place-items-center mb-3 transition-all duration-300 group-hover:border-[var(--accent)]"><i data-lucide="clapperboard" class="w-5 h-5 text-[var(--accent)]"></i></span>
+              <span class="text-[10px] font-mono text-[var(--muted)] mb-1">03</span>
+              <p class="font-sans font-semibold text-sm">Resolve</p>
+              <p class="text-[11px] text-[var(--muted)] font-sans">IMDB / TMDB</p>
+            </div>
+            <div class="flow-node group flex flex-col items-center text-center px-2">
+              <span class="fdot w-14 h-14 rounded-2xl border border-[var(--line)] bg-[var(--ink)] grid place-items-center mb-3 transition-all duration-300 group-hover:border-[var(--accent)]"><i data-lucide="git-compare" class="w-5 h-5 text-[var(--accent)]"></i></span>
+              <span class="text-[10px] font-mono text-[var(--muted)] mb-1">04</span>
+              <p class="font-sans font-semibold text-sm">Match</p>
+              <p class="text-[11px] text-[var(--muted)] font-sans">Strict scoring</p>
+            </div>
+            <div class="flow-node group flex flex-col items-center text-center px-2">
+              <span class="fdot fdot-end w-14 h-14 rounded-2xl border border-[var(--accent)] bg-[rgba(255,94,43,0.1)] grid place-items-center mb-3 transition-all duration-300"><i data-lucide="play" class="w-5 h-5 text-[var(--accent)]"></i></span>
+              <span class="text-[10px] font-mono text-[var(--accent)] mb-1">05</span>
+              <p class="font-sans font-semibold text-sm">Play</p>
+              <p class="text-[11px] text-[var(--muted)] font-sans">Stremio / Nuvio</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bento grid of capabilities -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <!-- Feature hero -->
+        <div class="bento group relative col-span-1 sm:col-span-2 lg:row-span-2 rounded-3xl border border-[var(--line)] p-7 overflow-hidden flex flex-col justify-between min-h-[220px]" data-reveal data-cursor>
+          <div class="flex items-start justify-between">
+            <span class="display text-6xl text-[var(--paper)]/12 group-hover:text-[var(--accent)] transition-colors duration-500">01</span>
+            <i data-lucide="server-cog" class="w-6 h-6 text-[var(--accent)]"></i>
+          </div>
+          <div>
+            <h3 class="display text-3xl mb-2">Serverless by nature</h3>
+            <p class="text-sm text-[var(--paper)]/60 font-sans leading-relaxed max-w-md">Node + TypeScript compiled to a single Vercel function. No always-on server, no database, no ops — it scales to zero and costs nothing at rest.</p>
+          </div>
+        </div>
+
+        <div class="bento group relative rounded-3xl border border-[var(--line)] p-6 overflow-hidden" data-reveal data-cursor>
+          <i data-lucide="database-zap" class="w-5 h-5 text-[var(--accent)] mb-4"></i>
+          <h4 class="font-sans font-semibold text-sm mb-1">Fully stateless</h4>
+          <p class="text-xs text-[var(--paper)]/55 font-sans leading-relaxed">Config rides inside the manifest URL. Nothing stored.</p>
+        </div>
+
+        <div class="bento group relative rounded-3xl border border-[var(--line)] p-6 overflow-hidden" data-reveal data-cursor>
+          <i data-lucide="scan-search" class="w-5 h-5 text-[var(--accent)] mb-4"></i>
+          <h4 class="font-sans font-semibold text-sm mb-1">Precise matching</h4>
+          <p class="text-xs text-[var(--paper)]/55 font-sans leading-relaxed">Strict scoring returns only the exact title.</p>
+        </div>
+
+        <div class="bento group relative rounded-3xl border border-[var(--line)] p-6 overflow-hidden" data-reveal data-cursor>
+          <i data-lucide="shield-check" class="w-5 h-5 text-[var(--accent)] mb-4"></i>
+          <h4 class="font-sans font-semibold text-sm mb-1">Private by design</h4>
+          <p class="text-xs text-[var(--paper)]/55 font-sans leading-relaxed">Credentials never touch a datastore.</p>
+        </div>
+
+        <div class="bento group relative rounded-3xl border border-[var(--line)] p-6 overflow-hidden" data-reveal data-cursor>
+          <i data-lucide="plug" class="w-5 h-5 text-[var(--accent)] mb-4"></i>
+          <h4 class="font-sans font-semibold text-sm mb-1">Protocol-native</h4>
+          <p class="text-xs text-[var(--paper)]/55 font-sans leading-relaxed">Stremio v3: catalog, meta &amp; stream.</p>
+        </div>
+
+        <!-- Tech tag strip -->
+        <div class="bento-tags col-span-1 sm:col-span-2 lg:col-span-4 rounded-3xl border border-[var(--line)] p-5 flex flex-wrap items-center gap-2.5" data-reveal>
+          <span class="text-[11px] font-mono uppercase tracking-[0.15em] text-[var(--muted)] mr-2">Built with</span>
+          <span class="text-[11px] font-mono px-3 py-1.5 rounded-full border border-[var(--line)] text-[var(--paper)]/70">TypeScript</span>
+          <span class="text-[11px] font-mono px-3 py-1.5 rounded-full border border-[var(--line)] text-[var(--paper)]/70">Node · Express</span>
+          <span class="text-[11px] font-mono px-3 py-1.5 rounded-full border border-[var(--line)] text-[var(--paper)]/70">Vercel</span>
+          <span class="text-[11px] font-mono px-3 py-1.5 rounded-full border border-[var(--line)] text-[var(--paper)]/70">TMDB API</span>
+          <span class="text-[11px] font-mono px-3 py-1.5 rounded-full border border-[var(--line)] text-[var(--paper)]/70">Xtream Codes</span>
+          <span class="text-[11px] font-mono px-3 py-1.5 rounded-full border border-[var(--line)] text-[var(--paper)]/70">M3U / M3U8</span>
+          <span class="text-[11px] font-mono px-3 py-1.5 rounded-full border border-[var(--line)] text-[var(--paper)]/70">LZ-String</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" class="relative z-10 px-5 sm:px-10 py-28 border-t border-[var(--line)]">
+    <div class="max-w-[900px] mx-auto">
+      <h2 class="display text-6xl sm:text-8xl mb-14" data-reveal>Questions</h2>
+      <div class="divide-y divide-[var(--line)]">
+        <details class="py-6 group" data-reveal><summary class="flex items-center justify-between cursor-pointer list-none font-sans font-semibold text-lg" data-cursor>Do I need a TMDB key?<i data-lucide="plus" class="w-5 h-5 text-[var(--accent)] group-open:rotate-45 transition-transform"></i></summary><p class="text-sm text-[var(--paper)]/60 font-sans mt-3 leading-relaxed">It's optional but recommended. A free TMDB v3 key powers poster art, ratings and the IMDB/TMDB resolution that lets global search map any title to your IPTV sources.</p></details>
+        <details class="py-6 group" data-reveal><summary class="flex items-center justify-between cursor-pointer list-none font-sans font-semibold text-lg" data-cursor>Where are my credentials stored?<i data-lucide="plus" class="w-5 h-5 text-[var(--accent)] group-open:rotate-45 transition-transform"></i></summary><p class="text-sm text-[var(--paper)]/60 font-sans mt-3 leading-relaxed">Nowhere on a server. They're LZ-compressed into the manifest URL you generate, so the addon is fully stateless and portable.</p></details>
+        <details class="py-6 group" data-reveal><summary class="flex items-center justify-between cursor-pointer list-none font-sans font-semibold text-lg" data-cursor>Does it work in Nuvio as well as Stremio?<i data-lucide="plus" class="w-5 h-5 text-[var(--accent)] group-open:rotate-45 transition-transform"></i></summary><p class="text-sm text-[var(--paper)]/60 font-sans mt-3 leading-relaxed">Yes. Both speak the Stremio v3 addon protocol. Use the one-click Stremio install, or paste the manifest URL into Nuvio's add-addon field.</p></details>
+        <details class="py-6 group" data-reveal><summary class="flex items-center justify-between cursor-pointer list-none font-sans font-semibold text-lg" data-cursor>Is hosting really free?<i data-lucide="plus" class="w-5 h-5 text-[var(--accent)] group-open:rotate-45 transition-transform"></i></summary><p class="text-sm text-[var(--paper)]/60 font-sans mt-3 leading-relaxed">The whole thing runs as one serverless function that fits comfortably in Vercel's free tier. No database, no always-on server.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA / FOOTER -->
+  <footer class="relative z-10 px-5 sm:px-10 pt-24 pb-10 border-t border-[var(--line)]">
+    <div class="max-w-[1400px] mx-auto">
+      <a href="/configure" class="block group" data-cursor>
+        <h2 class="display text-[13vw] leading-[0.9] mb-4 group-hover:text-[var(--accent)] transition-colors">Press play.</h2>
+      </a>
+
+      <!-- Columns -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 py-14 border-t border-[var(--line)] mt-10">
+        <div class="col-span-2 md:col-span-1">
+          <div class="flex items-center gap-2.5 mb-4">
+            <img src="/logo.svg" class="w-8 h-8 rounded-lg" alt="" />
+            <span class="font-sans font-semibold">IPTV Bridge</span>
+          </div>
+          <p class="text-sm text-[var(--muted)] font-sans leading-relaxed max-w-xs">Turn any Xtream or M3U source into a beautifully organized Stremio & Nuvio experience.</p>
+        </div>
+        <div>
+          <p class="text-xs uppercase tracking-[0.2em] text-[var(--muted)] font-sans mb-4">Product</p>
+          <ul class="space-y-2.5 text-sm font-sans text-[var(--paper)]/70">
+            <li><a href="#how" class="ul" data-cursor>Method</a></li>
+            <li><a href="#features" class="ul" data-cursor>Features</a></li>
+            <li><a href="#stack" class="ul" data-cursor>Architecture</a></li>
+            <li><a href="/configure" class="ul" data-cursor>Configure your addon</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="text-xs uppercase tracking-[0.2em] text-[var(--muted)] font-sans mb-4">Resources</p>
+          <ul class="space-y-2.5 text-sm font-sans text-[var(--paper)]/70">
+            <li><a href="/docs" class="ul" data-cursor>Documentation</a></li>
+            <li><a href="#faq" class="ul" data-cursor>FAQ</a></li>
+            <li><a href="https://www.themoviedb.org/settings/api" target="_blank" class="ul" data-cursor>Get a TMDB key</a></li>
+            <li><a href="https://www.stremio.com" target="_blank" class="ul" data-cursor>Stremio</a></li>
+            <li><a href="https://github.com/jozphe/IPTV-BRIDGE" target="_blank" class="ul" data-cursor>Source on GitHub</a></li>
+          </ul>
+        </div>
+        <div>
+          <p class="text-xs uppercase tracking-[0.2em] text-[var(--muted)] font-sans mb-3">Ready when you are</p>
+          <a href="/configure" class="ember inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full font-sans font-semibold text-sm leading-none w-full sm:w-auto" data-magnetic data-cursor-big>
+            <span>Configure now</span> <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+          </a>
+          <p class="text-xs text-[var(--muted)] font-sans mt-3 flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-[var(--accent)]"></i> Free · Serverless · Vercel-ready</p>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-4 pt-8 border-t border-[var(--line)] text-xs text-[var(--muted)] font-sans">
+        <span>© <span id="year"></span> IPTV Bridge · Built for the Stremio & Nuvio v3 addon protocol.</span>
+        <span>Made for people who just want their stuff to play.</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/theme.js"></script>
+  <script>
+    /* Marquee */
+    (function(){
+      const words=['Xtream Codes','M3U','TMDB','IMDB','Live TV','Movies','Series','Global Search','Serverless','Nuvio','Stremio','Vercel'];
+      const seq=words.concat(words);
+      document.getElementById('marquee-track').innerHTML=seq.map(w=>'<span class="flex items-center gap-12"><span class="display text-4xl text-[var(--paper)]/80">'+w+'</span><span class="w-2 h-2 rounded-full bg-[var(--accent)]"></span></span>').join('');
+    })();
+
+    /* Reveal + intro animations */
+    document.addEventListener('DOMContentLoaded', function () {
+      lucide.createIcons();
+      var y = document.getElementById('year'); if (y) y.textContent = new Date().getFullYear();
+
+      var hasIO = 'IntersectionObserver' in window;
+
+      // Generic reveals: one-shot CSS transition, no flash, no re-trigger.
+      var revealEls = document.querySelectorAll('[data-reveal]');
+      if (hasIO) {
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) { entry.target.classList.add('shown'); io.unobserve(entry.target); }
+          });
+        }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
+        revealEls.forEach(function (el) { io.observe(el); });
+      } else {
+        revealEls.forEach(function (el) { el.classList.add('shown'); });
+      }
+
+      // Staggered class-toggle groups (method cards, feature rows). Runs once.
+      function batchReveal(selector, triggerSelector, stagger) {
+        var els = Array.prototype.slice.call(document.querySelectorAll(selector));
+        if (!els.length) return;
+        var play = function () { els.forEach(function (el, i) { setTimeout(function () { el.classList.add('in'); }, i * stagger); }); };
+        if (!hasIO) { play(); return; }
+        var trigger = document.querySelector(triggerSelector) || els[0];
+        var obs = new IntersectionObserver(function (entries) {
+          for (var i = 0; i < entries.length; i++) {
+            if (entries[i].isIntersecting) { play(); obs.disconnect(); break; }
+          }
+        }, { rootMargin: '0px 0px -12% 0px', threshold: 0.1 });
+        obs.observe(trigger);
+      }
+      batchReveal('.method-card', '#method-grid', 110);
+      batchReveal('.feature-row', '#feature-list', 100);
+
+      // Hero intro timeline only (runs once on load).
+      if (!window.gsap) return;
+      gsap.registerPlugin(ScrollTrigger);
+      ScrollTrigger.config({ limitCallbacks: true, ignoreMobileResize: true });
+      var tl = gsap.timeline({ defaults: { ease: 'power4.out' } });
+      gsap.set('[data-hero-line]', { yPercent: 110 });
+      tl.to('[data-hero-line]', { yPercent: 0, duration: 1.1, stagger: 0.12 }, 0.15)
+        .from('[data-hero-tag]', { opacity: 0, y: 12, stagger: 0.08, duration: 0.6 }, 0.2)
+        .from('[data-hero-sub]', { opacity: 0, y: 20, duration: 0.8 }, 0.6)
+        .from('[data-hero-cta]', { opacity: 0, y: 20, duration: 0.8 }, 0.72)
+        .from('[data-hero-scroll]', { opacity: 0, duration: 0.8 }, 0.9);
+    });
+
+  </script>
+</body>
+</html>
